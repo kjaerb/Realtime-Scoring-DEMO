@@ -1,10 +1,7 @@
 import { realTimeDB } from "@/lib/firebase";
 import { objToArr } from "@/lib/utils";
 import useCompetitionStore from "@/stores/competitionStore";
-import {
-  JudgesConnected,
-  judgesConnectedSchema,
-} from "@/validators/judgesSchema";
+import { JudgesConnected } from "@/validators/judgesSchema";
 import {
   DataSnapshot,
   off,
@@ -70,14 +67,14 @@ interface UnmountJudgeProps {
  * @param judge Judge type
  */
 export function useMountJudge({ id, judge }: UnmountJudgeProps) {
-  const { setCompetitionId } = useCompetitionStore();
+  const { setCompetitionId, setJudgeId } = useCompetitionStore();
   const competitionRef = ref(realTimeDB, `${id}/judgesConnected/${judge}`);
 
   onDisconnect(competitionRef).set(false);
 
   useEffect(() => {
     setCompetitionId(id);
-
+    setJudgeId(judge);
     // On connect, set the judge to true
     set(competitionRef, true);
 
@@ -91,6 +88,7 @@ export function useMountJudge({ id, judge }: UnmountJudgeProps) {
 
     return () => {
       console.log("unmounting...");
+      setJudgeId("admin");
       off(competitionRef, "value", disconnectFromComponent);
     };
   }, []);

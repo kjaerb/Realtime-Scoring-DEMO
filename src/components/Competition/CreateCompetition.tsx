@@ -6,39 +6,44 @@ import { createCompetitionId } from "@/lib/utils";
 import { realTimeDB } from "@/lib/firebase";
 import { ref, set } from "firebase/database";
 import { useState } from "react";
-import { Loading } from "../ui/Loading";
+import { Loading } from "@/components/ui/Loading";
 import useCompetitionStore from "@/stores/competitionStore";
 
 interface CreateCompetitionProps {}
 
 export function CreateCompetition({}: CreateCompetitionProps) {
+  const { push } = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const router = useRouter();
   const { setCompetitionId } = useCompetitionStore();
 
   async function createAndGoToCompetition() {
-    setIsLoading(true);
-    const competitionId = createCompetitionId();
+    try {
+      setIsLoading(true);
+      const competitionId = createCompetitionId();
 
-    setCompetitionId(competitionId);
+      setCompetitionId(competitionId);
 
-    const competitionRef = ref(realTimeDB, `${competitionId}`);
+      const competitionRef = ref(realTimeDB, `${competitionId}`);
 
-    await set(competitionRef, {
-      judgesConnected: {
-        tof: false,
-        hd: false,
-        diff: false,
-        execution1: false,
-        execution2: false,
-        execution3: false,
-        execution4: false,
-      },
-    });
+      await set(competitionRef, {
+        judgesConnected: {
+          tof: false,
+          hd: false,
+          diff: false,
+          execution1: false,
+          execution2: false,
+          execution3: false,
+          execution4: false,
+        },
+      });
 
-    router.push(`/competition/${competitionId}/admin`);
-    setIsLoading(false);
+      push(`/competition/${competitionId}/admin`);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Loading } from "@/components/ui/Loading";
 import { useGetJudgesConnected } from "@/hooks/useJudges";
 import { realTimeDB } from "@/lib/firebase";
+import useCompetitionStore from "@/stores/competitionStore";
 import { judgeMap } from "@/validators/judgesSchema";
 import { ref, set } from "firebase/database";
 import { useRouter } from "next/navigation";
@@ -20,20 +21,22 @@ interface CompetitionIdPageParams {
 export default function CompetitionIdPage({
   params: { id },
 }: CompetitionIdPageProps & CompetitionIdPageParams) {
+  const { push } = useRouter();
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const router = useRouter();
-
   const { judges, judgeKeys } = useGetJudgesConnected(id);
+
+  const { setJudgeId } = useCompetitionStore();
 
   async function joinCompetitionAsJudge(judge: keyof typeof judges) {
     setIsLoading(true);
     const competitionRef = ref(realTimeDB, `${id}/judgesConnected/${judge}`);
 
     await set(competitionRef, true);
+    setJudgeId(judge);
 
-    router.push(`/competition/${id}/${judge}`);
-    setIsLoading(false);
+    push(`/competition/${id}/${judge}`);
   }
   return (
     <div className="flex flex-col justify-center items-center min-h-screen dark:text-white">

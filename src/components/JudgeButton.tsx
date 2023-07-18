@@ -9,11 +9,12 @@ interface JudgeButtonProps {
 }
 
 export function JudgeButton({ judgeId, children }: JudgeButtonProps) {
-  const router = useRouter();
+  const { push } = useRouter();
+
   const pathname = usePathname();
 
   function handleGoToJudgePage() {
-    router.push(`${pathname}/${judgeId}`);
+    push(`${pathname}/${judgeId}`);
   }
 
   return <Button onClick={handleGoToJudgePage}>{children}</Button>;

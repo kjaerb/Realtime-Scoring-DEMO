@@ -6,34 +6,53 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import useCompetitionStore from "@/stores/competitionStore";
+import { Loading } from "@/components/ui/Loading";
+import { get, ref } from "firebase/database";
+import { realTimeDB } from "@/lib/firebase";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
-interface JoinCompetitionDialogProps {
-  open: boolean;
-}
+interface JoinCompetitionDialogProps {}
 
-export function JoinCompetitionDialog({
-  open = false,
-}: JoinCompetitionDialogProps) {
+export function JoinCompetitionDialog({}: JoinCompetitionDialogProps) {
+  const { push } = useRouter();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [inputCompetitionId, setInputCompetitionId] = useState<string>("");
-  const router = useRouter();
   const { setCompetitionId } = useCompetitionStore();
 
-  function handleSubmitCompetitionId(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmitCompetitionId(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setIsLoading(true);
 
-    setCompetitionId(inputCompetitionId);
+    const val = (await get(ref(realTimeDB, inputCompetitionId))).val();
 
-    router.push(`/competition/${inputCompetitionId}`);
+    if (val) {
+      setCompetitionId(inputCompetitionId);
+
+      push(`/competition/${inputCompetitionId}`);
+    } else {
+      toast({
+        title: "Competition not found",
+        description: "Please check the competition code",
+        variant: "destructive",
+      });
+    }
+
+    setIsLoading(false);
   }
 
   return (
-    <Dialog open={open}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Join competition</Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="dark:text-white">
@@ -51,7 +70,9 @@ export function JoinCompetitionDialog({
               className="mb-4"
             />
             <DialogFooter>
-              <Button type="submit">Join competition</Button>
+              <Button disabled={isLoading} type="submit">
+                {isLoading ? <Loading /> : "Join competition"}
+              </Button>
             </DialogFooter>
           </form>
         </div>
